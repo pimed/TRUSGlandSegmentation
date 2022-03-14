@@ -40,8 +40,8 @@ conda activate torch_gpu
 ```
 
 
-## Train SPCNET On Your Data
-Please place your MRI data and their corresponding labels in the dataset directory. To train SPCNET on your data, you can run train.py file as following:
+## Train On Your Data
+Please place your TRUS data and their corresponding labels in the dataset directory. To train our model on your data, you can run train.py file as following:
  
  ```python -u train.py```
  
