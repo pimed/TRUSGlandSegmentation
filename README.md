@@ -3,12 +3,16 @@
  
 # Domain Generalization for Prostate Segmentation in Transrectal Ultrasound Images: A Multi-center Study
 
-## (coming soon)
-
 [![Paper](https://img.shields.io/badge/arXiv-2011.11390-brightgreen)]()
 [![journal](https://img.shields.io/badge/Journal-Medical%20Image%20Analysis-red)]()
 
+ ## (coming soon)
 </div>
+Pytorch implementation of our paper: "Vesal et al.: Domain Generalization for Prostate Segmentation in Transrectal Ultrasound Images: A Multi-center Study [Medical Image Analysis, 2022].
+
+Our source code has been tested successfully on Windows 10, Cuda 10.1, RTX 2080 Ti, Anaconda Python 3.7, PyTorch 1.7
+
+The code is only for research purposes. If you have any questions regarding how to use this code, feel free to contact Dr.Mirabela Rusu (Mirabela.rusu@stanford.edu).
 
 ---
 ## Abstract
