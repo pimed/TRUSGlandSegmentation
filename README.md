@@ -3,6 +3,8 @@
  
 # Domain Generalization for Prostate Segmentation in Transrectal Ultrasound Images: A Multi-center Study
 
+## (coming soon)
+
 [![Paper](https://img.shields.io/badge/arXiv-2011.11390-brightgreen)]()
 [![journal](https://img.shields.io/badge/Journal-Medical%20Image%20Analysis-red)]()
 
@@ -42,3 +44,17 @@ conda activate torch_gpu
 Please place your MRI data and their corresponding labels in the dataset directory. To train SPCNET on your data, you can run train.py file as following:
  
  ```python -u train.py```
+ 
+ ## Citations
+Please consider citing the following papers in your publications if the source code helped your research.
+```bibtex
+
+@misc{Natarajan2020,
+    author       = {Natarajan, S. and Priester, A. and  Margolis, D. and Huang, J. and Marks, L. },
+    title        = {{Prostate MRI and Ultrasound With Pathology and Coordinates of Tracked Biopsy (Prostate-MRI-US-Biopsy)}},
+    year         = 2020,
+    doi          = {10.7937/TCIA.2020.A61IOC1A},
+    publisher    = {The Cancer Imaging Archive},
+    }
+    
+```
