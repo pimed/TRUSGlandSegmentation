@@ -15,7 +15,7 @@ Our source code has been tested successfully on Windows 10, Cuda 10.1, RTX 2080 
 The code is only for research purposes. If you have any questions regarding how to use this code, feel free to contact Dr.Mirabela Rusu (Mirabela.rusu@stanford.edu).
 
 <table align="center" border=0><tr><td align="center" width="9999">
-<img src="images/graphical_figure.pdf" align="center" width="800" alt="Project icon">
+<img src="images/graphical_figure.png" align="center" width="800" alt="Project icon">
 
 </td></tr></table>
 
