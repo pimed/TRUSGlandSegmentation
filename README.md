@@ -53,6 +53,28 @@ Please place your TRUS data and their corresponding labels in the dataset direct
  
  ```python -u train.py```
  
+ 
+# Inference
+Our source code has been tested successfully on Linux Mint and Windows 10, Cuda 10.0, Quadro RTX 8000, Anaconda Python 3.8, PyTorch 1.7.0.
+
+To test the model on your data, please place your TRUS data (images and corresponding segmentation masks) in the input folder:
+```
+-/input
+  -/images
+    -- case1_xxx_xxx.nii.gz
+       ....
+  -/masks
+    -- case1_xxx_xxx_mask.nii.gz
+       ....
+``` 
+
+## Visualization of segmentation results
+
+Axial View                 |  Sagittal View            | Coronal View             |
+:-------------------------:|:-------------------------:|:-------------------------:
+![](https://github.com/sulaimanvesal/TRUSGlandSeg/blob/main/images/Axial.gif)   |  ![](https://github.com/sulaimanvesal/TRUSGlandSeg/blob/main/images/Sagittal.gif)|  ![](https://github.com/sulaimanvesal/TRUSGlandSeg/blob/main/images/Coronal.gif)
+
+ 
  ## Citations
 Please consider citing the following papers in your publications if the source code helped your research.
 ```bibtex
