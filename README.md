@@ -87,4 +87,15 @@ Please consider citing the following papers in your publications if the source c
     publisher    = {The Cancer Imaging Archive},
     }
     
+@article{VESAL2022102620,
+    title = {Domain generalization for prostate segmentation in transrectal ultrasound images: A multi-center study},
+    journal = {Medical Image Analysis},
+    volume = {82},
+    pages = {102620},
+    year = {2022},
+    issn = {1361-8415},
+    doi = {https://doi.org/10.1016/j.media.2022.102620},
+    author = {Sulaiman Vesal and Iani Gayo and Indrani Bhattacharya and Shyam Natarajan and Leonard S. Marks and Dean C Barratt and Richard E. Fan and Yipeng Hu and Geoffrey A. Sonn and Mirabela Rusu},
+}
+    
 ```
