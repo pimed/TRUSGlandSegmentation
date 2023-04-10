@@ -6,7 +6,6 @@
 [![Paper](https://img.shields.io/badge/arXiv-2011.11390-brightgreen)]()
 [![journal](https://img.shields.io/badge/Journal-Medical%20Image%20Analysis-red)]()
 
- ## (coming soon)
 </div>
 Pytorch implementation of our paper: "Vesal et al.: Domain Generalization for Prostate Segmentation in Transrectal Ultrasound Images: A Multi-center Study [Medical Image Analysis, 2022].
 
