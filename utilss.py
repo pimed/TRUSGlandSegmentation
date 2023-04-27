@@ -65,6 +65,7 @@ def overlay_image(img, seg, pred=None):
             cv2.drawContours(img, [c], -1, colour, thickness = 3)
     return img
 
+
 def to_categorical(mask, num_classes, channel='channel_first'):
     """
     :param mask: binary mask image with size WxHxC
@@ -155,28 +156,29 @@ def resize_volume(vol, w=128, h=160, view='axial', is_img=True, cohort='UCL'):
                     slice_img = np.moveaxis(slice_img, 1, 2)
                 else:
                     slice_img = vol[i, :, :]
-            img_res.append(cv2.resize(slice_img, dsize=(h, w), interpolation=cv2.INTER_NEAREST))
+            # need the rotation of needle sequences as it wrongly processed
+            # TODO: Anirudh will update the processed data so we don't need rotation.
+            img_res.append(cv2.resize(np.rot90(slice_img, 3), dsize=(h, w), interpolation=cv2.INTER_NEAREST))
         return np.array(img_res)
     else:
         # we loop over the last dimension,to get axial view images, UCLA and Stanford axial view will be (x, y, z)
         z = vol.shape[2]
         # loop over z axis to extract 3 channel inputs for the model.
         for i in range(z):
-            if view == 'axial':
-                if is_img and i == 0:
-                    slice_img = vol[:, :, 0:i + 3]
-                elif is_img and i == z - 1:
-                    slice_img = vol[:, :, i - 2:i + 1]
-                elif is_img:
-                    slice_img = vol[:, :, i - 1:i + 2]
-                else:
-                    slice_img = vol[:, :, i]
+            if is_img and i == 0:
+                slice_img = vol[:, :, 0:i + 3]
+            elif is_img and i == z - 1:
+                slice_img = vol[:, :, i - 2:i + 1]
+            elif is_img:
+                slice_img = vol[:, :, i - 1:i + 2]
+            else:
+                slice_img = vol[:, :, i]
             img_res.append(cv2.resize(slice_img, dsize=(h, w), interpolation=cv2.INTER_NEAREST))
 
         return np.array(img_res)
 
 
-def resize_volume_back(vol, h=224, w=288, view='axial', flip_slice=False):
+def resize_volume_back(vol, h=224, w=288, rotate_slice = True, flip_slice=False):
     """
     :param vol: the ultrasound volume with size WxHxC
     :param w: the image width after resizing
@@ -194,7 +196,11 @@ def resize_volume_back(vol, h=224, w=288, view='axial', flip_slice=False):
         view_slice = vol[i, :, :]
         if flip_slice:
             resized_vol.append(cv2.resize(np.fliplr(view_slice), (w, h), cv2.INTER_AREA))
+        elif rotate_slice:
+            resized_vol.append(cv2.resize(np.rot90(view_slice, 1), (w, h), cv2.INTER_AREA))
         else:
+            # need the rotation of needle sequences as it wrongly processed
+            # TODO: Anirudh will update the processed data so we don't need rotation.
             resized_vol.append(cv2.resize(view_slice, (w, h), cv2.INTER_AREA))
     return np.array(resized_vol)
 
@@ -299,7 +305,7 @@ def metrics(img_gt, img_pred, voxel_size, label_index = 1):
     return res
 
 
-def compute_metrics_on_files(path_gt, gt, pred, zooms, header=True, label_index = 1):
+def compute_metrics_on_files(path_gt, gt, pred, voxel_size, header=True, label_index = 1):
     """
     Function to give the metrics for two files
     Parameters
@@ -315,7 +321,7 @@ def compute_metrics_on_files(path_gt, gt, pred, zooms, header=True, label_index 
 
     name = os.path.basename(path_gt)
     name = name.split('.')[0]
-    res = metrics(gt, pred, zooms, label_index=label_index)
+    res = metrics(gt, pred, voxel_size, label_index=label_index)
     res = ["{:.3f}".format(r) for r in res]
     formatting = "{:>8}, {:>8}, {:>10}, {:>10}, {:>10}, {:>10},  {:>10}, {:>10}, {:>10}"
     if header:
