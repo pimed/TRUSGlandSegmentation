@@ -1,8 +1,17 @@
-"""
-@Author: Sulaiman Vesal
-Date: Tuesday, 04, 2020
+#  Copyright 2023 Laboratory for Integrative Personalized Medicine (PIMed), Stanford University, USA
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 
-"""
 from __future__ import print_function, division
 from torch import nn, cat
 from torch.utils.tensorboard import SummaryWriter
@@ -32,7 +41,12 @@ class h_swish(nn.Module):
 
 
 class CoordAtt(nn.Module):
+        """
+        Adapted from the CPVR 2021 paper: https://arxiv.org/abs/2103.02907
+        https://github.com/houqb/CoordAttention/blob/main/coordatt.py
+        """
     def __init__(self, inp, oup, reduction=32):
+
         super(CoordAtt, self).__init__()
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
         self.pool_w = nn.AdaptiveAvgPool2d((1, None))
@@ -63,11 +77,8 @@ class CoordAtt(nn.Module):
 
         a_h = self.conv_h(x_h).sigmoid()
         a_w = self.conv_w(x_w).sigmoid()
-
         out = identity * a_w * a_h
-
         return out
-
 
 
 class Attention_block(nn.Module):
@@ -102,7 +113,6 @@ class Attention_block(nn.Module):
 
 
 class Encoder(nn.Module):
-
     def __init__(
             self, filters=64,
             in_channels=3,
@@ -133,6 +143,8 @@ class Encoder(nn.Module):
                       nn.ReLU(inplace=True)]
             if batch_norm:
                 model += [nn.BatchNorm2d(num_features=out_ch)]
+            
+            # you can put attention to false if you don't want in encoder part.
             if attention:
                 model += [CoordAtt(inp=out_ch, oup=out_ch)]
             self.add_module('encoder%d' % (i + 1), nn.Sequential(*model))
@@ -165,8 +177,12 @@ class Bottleneck(nn.Module):
         in_ch = filters * 2 ** (n_block - 1)
         for i in range(depth):
             dilate = 2 ** i
-            model = [nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=kernel_size, padding=dilate,
-                          dilation=dilate), nn.ReLU(inplace=True)]
+            model = [nn.Conv2d(in_channels=in_ch, 
+                               out_channels=out_ch, 
+                               kernel_size=kernel_size,
+                               padding=dilate,
+                               dilation=dilate), 
+                     nn.ReLU(inplace=True)]
             self.add_module('bottleneck%d' % (i + 1), nn.Sequential(*model))
             if i == 0:
                 in_ch = out_ch
@@ -200,18 +216,29 @@ class Decoder(nn.Module):
             out_ch = filters * 2 ** i
             in_ch = 2 * out_ch
             model = [nn.UpsamplingNearest2d(scale_factor=(2, 2)),
-                     nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=kernel_size,
+                     nn.Conv2d(in_channels=in_ch, 
+                               out_channels=out_ch, 
+                               kernel_size=kernel_size,
                                padding=pad)]
             self.add_module('decoder1_%d' % (i + 1), nn.Sequential(*model))
 
-            model = [nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=kernel_size, padding=pad),
-                     nn.ReLU(inplace=True)]
+            model = [nn.Conv2d(in_channels=in_ch, 
+                               out_channels=out_ch, 
+                               kernel_size=kernel_size, 
+                               padding=pad),
+                     nn.ReLU(inplace=True)
+                    ]
             if batch_norm:
                 model += [nn.BatchNorm2d(num_features=out_ch)]
-            model += [nn.Conv2d(in_channels=out_ch, out_channels=out_ch, kernel_size=kernel_size, padding=pad),
-                      nn.ReLU(inplace=True)]
+            model += [nn.Conv2d(in_channels=out_ch, 
+                                out_channels=out_ch,
+                                kernel_size=kernel_size, 
+                                padding=pad),
+                      nn.ReLU(inplace=True)
+                     ]
             if batch_norm:
                 model += [nn.BatchNorm2d(num_features=out_ch)]
+            # you can put attention to false if you don't want in encoder part.
             if attention:
                 model += [CoordAtt(inp=out_ch, oup=out_ch)]
             self.add_module('decoder2_%d' % (i + 1), nn.Sequential(*model))
@@ -238,9 +265,13 @@ class Segmentation_model(nn.Module):
             attention=False
     ):
         super().__init__()
+        # encoder class
         self.encoder = Encoder(filters=filters, in_channels=in_channels, n_block=n_block, attention=attention)
+        # dialated bottleneck class
         self.bottleneck = Bottleneck(filters=filters, n_block=n_block, depth=bottleneck_depth)
+        # decoder class
         self.decoder = Decoder(filters=filters, n_block=n_block, attention=attention)
+        # classifier class
         self.classifier = nn.Conv2d(in_channels=filters, out_channels=n_class, kernel_size=(1, 1))
 
     def forward(self, x, features_out=False):
@@ -248,6 +279,7 @@ class Segmentation_model(nn.Module):
         output_bottleneck = self.bottleneck(output)
         output = self.decoder(output_bottleneck, skip)
         output = self.classifier(output)
+        # if you need the bottleneck feature make features_out to true
         if features_out:
             return output, output_bottleneck
         else:
@@ -255,6 +287,6 @@ class Segmentation_model(nn.Module):
 
 
 if __name__ == '__main__':
-    net = Segmentation_model(filters=32, n_block=3, in_channels=1, attention=False).cuda()
+    net = Segmentation_model(filters=32, n_block=4, in_channels=1, attention=True).cuda()
     arch = summary(net, torch.rand((1, 1, 128, 160)).cuda())
     print(arch)
