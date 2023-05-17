@@ -25,7 +25,7 @@ Our method achieved an average Dice Similarity Coefficient (Dice) of 94.0(+/-0.0
 
 ### Comparison to Squeeze-and-Excitation block and CBAM
 
-![diagram](diagram.png)
+![diagram](images/diagram.png)
 
 (a) Squeeze-and-Excitation block      (b) CBAM      (C) Coordinate attention block
 
