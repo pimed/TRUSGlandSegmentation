@@ -135,12 +135,20 @@ class Encoder(nn.Module):
                 pad = kernel_size[0] // 2
             else:
                 pad = 0
-            model = [nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=kernel_size, padding=pad),
-                     nn.ReLU(inplace=True)]
+            model = [nn.Conv2d(in_channels=in_ch, 
+                               out_channels=out_ch, 
+                               kernel_size=kernel_size, 
+                               padding=pad),
+                     nn.ReLU(inplace=True)
+                    ]
             if batch_norm:
                 model += [nn.BatchNorm2d(num_features=out_ch)]
-            model += [nn.Conv2d(in_channels=out_ch, out_channels=out_ch, kernel_size=kernel_size, padding=pad),
-                      nn.ReLU(inplace=True)]
+            model += [nn.Conv2d(in_channels=out_ch, 
+                                out_channels=out_ch, 
+                                kernel_size=kernel_size, 
+                                padding=pad),
+                      nn.ReLU(inplace=True)
+                     ]
             if batch_norm:
                 model += [nn.BatchNorm2d(num_features=out_ch)]
             
