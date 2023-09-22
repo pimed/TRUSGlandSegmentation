@@ -4,6 +4,8 @@ Date: Tuesday, 04, 2023
 
 """
 from __future__ import print_function, division
+
+import matplotlib.pyplot as plt
 import pandas as pd
 import glob
 import torch
@@ -31,9 +33,11 @@ def get_seed(seed=3):
 def get_test_dataset_ultrasound(img_path,
                                 h=128,
                                 w=160,
-                                resampling=False):
+                                resampling=False,
+                                plot=False):
     """
     Read and process TRUS images and corresponding masks
+    :param plot:
     :param img_path: TRUS .nii image path
     :param mask_path: TRUS .nii/.nrrd segmentation path
     :param h: the image height after resizing
@@ -51,17 +55,24 @@ def get_test_dataset_ultrasound(img_path,
 
     # whether to resample the image into desired spacing
     if resampling:
-        if list(original_image_spacing) != [0.25, 0.25, 0.25]:
+        if list(original_image_spacing) != args.image_spacing:
             print("resampled")
-            us_image = resample_image(us_image, [0.25, 0.25, 0.25])
+            us_image = resample_image(us_image, args.image_spacing)
 
     # get numpy array from ITK image
     us_array = sitk.GetArrayFromImage(us_image)
     outputshape = np.shape(us_array)
 
+    # plot slices for sanity check before resizing
+    if plot:
+        plt.imshow(us_array[20, ...], cmap='gray')
+        plt.show()
     # Resize ultrasound volumes based on axial view
-    us_array = resize_volume(us_array, h, w, cohort='UCL', is_img=True)
-
+    us_array = resize_volume(us_array, h, w, cohort=args.cohort, is_img=True)
+    # plot slices for sanity check after resizing
+    if plot:
+        plt.imshow(us_array[20, ...], cmap='gray')
+        plt.show()
     return np.array(us_array), outputshape, original_image_spacing, original_image_origin, original_image_direction
 
 
@@ -97,6 +108,7 @@ def inference(args,
 
         # normalize the volume, min-max normalization
         image = np.array(image, np.float32) / 255.
+        print("This is the input shape for the model:", image.shape)
         image = np.moveaxis(image, -1, 1)
 
         # predict the input slices using 2.5 Model
@@ -117,9 +129,14 @@ def inference(args,
             y_pred = median_filter(y_pred, size=7)
 
         # here we resize the volume back to it's original shape based on different view.
-        if args.ultrasound_view == 'axial':
+        print("This is the model prediction shape:", y_pred.shape)
+        if args.cohort == 'stanford':
+            y_pred = resize_volume_back(y_pred, h=output_shape[0], w=output_shape[1])
+            y_pred = np.moveaxis(y_pred, 1, 0)
+            y_pred = np.moveaxis(y_pred, 1, 2)
+        else:
             y_pred = resize_volume_back(y_pred, h=output_shape[1], w=output_shape[2])
-
+        print("This is the prediction after resizing:", y_pred.shape)
         # Create ITK image to save into the disk
         out = sitk.GetImageFromArray(y_pred)
         out.SetSpacing(spacing)
@@ -129,8 +146,7 @@ def inference(args,
         # if to resample the image to original spacing
         # out = resample_image(out, spacing)
         # save the image into the disk
-        sitk.WriteImage(out, "T:/Project/Anirudh/dataset/21177407/cropped_data/results/{}".format(os.path.basename(
-            image_path.replace('.nii.gz', '_pred.nii.gz'))))
+        sitk.WriteImage(out, "results/{}".format(os.path.basename(image_path.replace('.nii.gz', '_pred.nii.gz'))))
 
 
 if __name__ == '__main__':
@@ -148,24 +164,27 @@ if __name__ == '__main__':
         print('Cached:   ', round(torch.cuda.memory_reserved(0) / 1024 ** 3, 1), 'GB')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-basedir", help="the path to dataset folder", type=str, default="input/")
+    parser.add_argument("-basedir", help="the path to dataset folder", type=str, default="input/Patdbase")
     parser.add_argument("-mt", "--model_type", help="which model should use for prediction", type=str,
-                        default="drunet2.5D")
+                        default="coorddrunet2.5D")
     parser.add_argument("--n_samples", help="number of samples to train", type=int, default=-1)
     parser.add_argument("-bs", "--batch_size", help="batch size of training", type=int, default=128)
+    parser.add_argument("-sp", "--image_spacing", help="image spacing", type=list, default=[0.25, 0.25, 0.25])
     parser.add_argument("-nc", "--n_class", help="number of classes to segment", type=int, default=2)
     parser.add_argument("-nf", "--n_filter", help="number of initial filters for DR-UNET", type=int, default=32)
     parser.add_argument("-nb", "--n_block", help="number unet blocks", type=int, default=3)
     parser.add_argument("-in", "--in_channel", help="number input channels", type=int, default=3)
     parser.add_argument("-us_view", "--ultrasound_view", help="the view of ultrasound image", type=str, default='axial')
-    parser.add_argument("-co", "--cohort", help="the cohort name for test dataset", type=str, default='UCIL')
+    parser.add_argument("-co", "--cohort", help="the cohort name for test dataset, please for stanford data use "
+                                                "'stanford' and for needle sequences use 'NEEDLESEQ'", type=str,
+                        default='stanford')
     parser.add_argument("-or", "--outputdir", help="the cohort name for test dataset", type=str,
                         default='NeedleCineLoops')
     args = parser.parse_args()
     if not os.path.join('results/{}/{}/'.format(args.cohort, args.outputdir)):
         os.makedirs(os.path.join('results/{}/{}/'.format(args.cohort, args.outputdir)))
     data = []
-    for pat in glob.glob(os.path.join("T:/Project/Anirudh/dataset/21177407/cropped_data/", "*.nii.gz")):
+    for pat in glob.glob(os.path.join(args.basedir, "*.nii.gz")):
         base_name = os.path.split(pat)
         pat_id = base_name[-1][0:16]
         data.append([pat, pat_id])
@@ -174,7 +193,6 @@ if __name__ == '__main__':
     print(df.head)
     # train_df, valid_df, test_df = data_split(df)
     test_df = df
-    args.model_type = 'coorddrunet2.5D'
     if args.model_type == 'drunet2.5D':
         model = Segmentation_model(filters=args.n_filter,
                                    in_channels=args.in_channel,
@@ -193,7 +211,7 @@ if __name__ == '__main__':
                                    attention=True)
         model.load_state_dict(
             torch.load(
-                'weights/MeDIA_Revision_CoordDRUNet_LDE_case13_0.0001_32.gaussian_noise/unet_model_checkpoint.pt'))
+                'weights/prostateUS.unetcoord_100Per_lesion_LKD_lr_0.0001_32.gaussian_noise/unet_model_checkpoint.pt'))
         print("CoordDR-UNet2.5D model is loaded...!")
     elif args.model_type == 'attunet2.5D':
         model = AttU_Net(img_ch=args.in_channel, output_ch=args.n_class)
