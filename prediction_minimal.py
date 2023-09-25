@@ -176,7 +176,7 @@ if __name__ == '__main__':
     parser.add_argument("-in", "--in_channel", help="number input channels", type=int, default=3)
     parser.add_argument("-us_view", "--ultrasound_view", help="the view of ultrasound image", type=str, default='axial')
     parser.add_argument("-co", "--cohort", help="the cohort name for test dataset, please for stanford data use "
-                                                "'stanford' and for needle sequences use 'NEEDLESEQ'", type=str,
+                                                "'stanford' and for needle sequences use 'needle'", type=str,
                         default='stanford')
     parser.add_argument("-or", "--outputdir", help="the cohort name for test dataset", type=str,
                         default='NeedleCineLoops')
