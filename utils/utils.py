@@ -160,7 +160,7 @@ def resize_volume(vol, w=128, h=160, view='axial', is_img=True, cohort='UCL'):
             # TODO: Anirudh will update the processed data so we don't need rotation.
             img_res.append(cv2.resize(np.rot90(slice_img, 3), dsize=(h, w), interpolation=cv2.INTER_NEAREST))
         return np.array(img_res)
-    elif cohort =='NEEDELSEQ':
+    elif cohort =='needle':
         # we loop over the last dimension,to get axial view images, UCLA and Stanford axial view will be (x, y, z)
         z = vol.shape[0]
         # loop over z axis to extract 3 channel inputs for the model.
