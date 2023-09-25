@@ -34,7 +34,7 @@ def get_test_dataset_ultrasound(img_path,
                                 h=128,
                                 w=160,
                                 resampling=False,
-                                plot=False):
+                                plot=True):
     """
     Read and process TRUS images and corresponding masks
     :param plot:
@@ -193,17 +193,8 @@ if __name__ == '__main__':
     print(df.head)
     # train_df, valid_df, test_df = data_split(df)
     test_df = df
-    if args.model_type == 'drunet2.5D':
-        model = Segmentation_model(filters=args.n_filter,
-                                   in_channels=args.in_channel,
-                                   n_block=args.n_block,
-                                   n_class=args.n_class)
-        model.load_state_dict(
-            torch.load('weights/MeDIA_Revision_CoordDRUNet_LDE_case9_Lambda_1.0_0.0001_32.gaussian_noise'
-                       '/unet_model_checkpoint.pt'))
-        print("DR-UNet2.5D model is loaded...!")
 
-    elif args.model_type == 'coorddrunet2.5D':
+    if args.model_type == 'coorddrunet2.5D':
         model = Segmentation_model(filters=args.n_filter,
                                    in_channels=args.in_channel,
                                    n_block=args.n_block,
